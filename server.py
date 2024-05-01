@@ -21,14 +21,24 @@ def broadcast(message, chatroom):
         if chatrooms[i] == chatroom:
             client.send(message)
 
+def sanitize(data):
+    """Simple sanitizer to remove any non-alphanumeric characters except space, hyphen, underscore."""
+    import re
+    return re.sub(r'[^a-zA-Z0-9 _-]', '', data)
+
 def handle(client):
     while True:
         try:
             message = client.recv(1024).decode('ascii')
             message_data = message.split('|')
-            chatroom = message_data[0]
-            broadcast_message = '|'.join(message_data).encode('ascii')
-            broadcast(broadcast_message, chatroom)
+            if len(message_data) >= 3:
+                # Sanitize chatroom ID, nickname, and message
+                chatroom = sanitize(message_data[0])
+                nickname = sanitize(message_data[1])
+                user_message = sanitize('|'.join(message_data[2:]))  # Join back in case the message includes '|'
+                
+                broadcast_message = f"{chatroom}|{nickname}|{user_message}".encode('ascii')
+                broadcast(broadcast_message, chatroom)
         except:
             index = clients.index(client)
             clients.remove(client)
@@ -40,6 +50,27 @@ def handle(client):
             nicknames.remove(nickname)
             chatrooms.remove(chatroom)
             break
+
+
+# def handle(client):
+#     while True:
+#         try:
+#             message = client.recv(1024).decode('ascii')
+#             message_data = message.split('|')
+#             chatroom = message_data[0]
+#             broadcast_message = '|'.join(message_data).encode('ascii')
+#             broadcast(broadcast_message, chatroom)
+#         except:
+#             index = clients.index(client)
+#             clients.remove(client)
+#             client.close()
+#             nickname = nicknames[index]
+#             chatroom = chatrooms[index]
+#             left_message = f"{chatroom}|{nickname}|left!".encode('ascii')
+#             broadcast(left_message, chatroom)
+#             nicknames.remove(nickname)
+#             chatrooms.remove(chatroom)
+#             break
 
 def receive():
     while True:

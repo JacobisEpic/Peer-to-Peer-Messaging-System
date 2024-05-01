@@ -33,11 +33,24 @@ def receive():
             client.close()
             break
 
+def sanitize(data):
+    """Simple sanitizer to remove any non-alphanumeric characters except space, hyphen, underscore."""
+    import re
+    return re.sub(r'[^a-zA-Z0-9 _-]', '', data)
+
 def write():
     while True:
         message = input('')
-        message_data = f"{chatroom}|{nickname}|{message}"
+        sanitized_message = sanitize(message)
+        message_data = f"{chatroom}|{nickname}|{sanitized_message}"
         client.send(message_data.encode('ascii'))
+
+
+# def write():
+#     while True:
+#         message = input('')
+#         message_data = f"{chatroom}|{nickname}|{message}"
+#         client.send(message_data.encode('ascii'))
 
 receive_thread = threading.Thread(target=receive)
 receive_thread.start()
